@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/signal"
 	"time"
 )
 
@@ -16,6 +17,7 @@ const DURATION = 10
 
 var WorkDir string
 var CurrentDir string
+var dayChange *time.Ticker
 
 func main() {
 	HomeDirectory, err := os.UserHomeDir()
@@ -31,6 +33,11 @@ func main() {
 		log.Fatalf("Error creating working directory: %v", err)
 	}
 
+	n := time.Now()
+	d := time.Until(time.Date(n.Year(), n.Month(), n.Day()+1, 0, 0, 0, 0, n.Location()))
+	dayChange = time.NewTicker(d)
+	defer dayChange.Stop()
+
 	startTracking()
 }
 
@@ -39,22 +46,41 @@ func startTracking() {
 
 	minutesPassed := 0
 	captureAfter := 1 + rand.Int()%DURATION
-	ticker := time.NewTicker(time.Duration(captureAfter) * time.Second)
+	ticker := time.NewTicker(time.Duration(captureAfter) * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		record.DailyRecord += 1
-		record.WeeklyRecord += 1
-		minutesPassed += captureAfter
-		captureAfter = (1 + rand.Int()%DURATION) + (DURATION - captureAfter)
-		ticker.Reset(time.Duration(captureAfter) * time.Second)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
 
-		record.Timestamp = time.Now()
-		saveScreenshot(record.Timestamp)
-		record.ActiveWindow = tracker.GetActiveWindowName()
+	fmt.Println("Time tracking started..")
+	for {
+		select {
+		case now := <-ticker.C:
+			record.DailyRecord += 1
+			record.WeeklyRecord += 1
+			minutesPassed += captureAfter
+			captureAfter = (1 + rand.Int()%DURATION) + (DURATION - captureAfter)
+			ticker.Reset(time.Duration(captureAfter) * time.Minute)
 
-		record.log()
-		record.print()
+			record.Timestamp = now
+			record.ActiveWindow = tracker.GetActiveWindowName()
+			saveScreenshot(now)
+
+			record.log()
+			record.print()
+			record.KeyboardStrokes = 0
+			record.MouseStrokes = 0
+		case now := <-dayChange.C:
+			CurrentDir = WorkDir + "/" + now.Format("20060102")
+			err := os.MkdirAll(CurrentDir, os.ModePerm)
+			if err != nil {
+				log.Fatalf("Error creating working directory: %v", err)
+			}
+			dayChange.Reset(24 * time.Hour)
+		case <-c:
+			fmt.Println("Time tracking stopped..")
+			return
+		}
 	}
 }
 
@@ -84,7 +110,8 @@ func saveScreenshot(timestamp time.Time) {
 
 func getLastRecord() Record {
 	today := time.Now()
-	day := (6 + today.Weekday()) % 7 // 0: Monday, 6: Sunday
+	currentDay := (6 + today.Weekday()) % 7 // 0: Monday, 6: Sunday
+	day := currentDay
 
 	for ; day >= 0; day-- {
 		dir := WorkDir + "/" + today.Format("20060102")
@@ -111,9 +138,16 @@ func getLastRecord() Record {
 				log.Printf("Error getting last record: %v\n", err)
 				return Record{}
 			}
+
+			record.KeyboardStrokes = 0
+			record.MouseStrokes = 0
+			if day != currentDay {
+				record.DailyRecord = 0
+			}
+
 			return record
 		}
-		today.AddDate(0, 0, -1)
+		today = today.AddDate(0, 0, -1)
 	}
 
 	return Record{}
