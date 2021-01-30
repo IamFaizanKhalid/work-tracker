@@ -17,7 +17,6 @@ const DURATION = 10
 
 var WorkDir string
 var CurrentDir string
-var dayChange *time.Ticker
 
 func main() {
 	HomeDirectory, err := os.UserHomeDir()
@@ -42,18 +41,24 @@ func startTracking() {
 	// Ticker to trigger capture
 	rand.Seed(time.Now().UTC().UnixNano())
 	captureAfter := 1 + rand.Int()%DURATION
-	ticker := time.NewTicker(time.Duration(captureAfter) * time.Second)
+	ticker := time.NewTicker(time.Duration(captureAfter) * time.Minute)
 	defer ticker.Stop()
 
 	// Ticker to change day
 	n := time.Now()
 	d := time.Until(time.Date(n.Year(), n.Month(), n.Day()+1, 0, 0, 0, 0, n.Location()))
-	dayChange = time.NewTicker(d)
+	dayChange := time.NewTicker(d)
 	defer dayChange.Stop()
 
 	// Channel to detect interrupt
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+
+	// Get KeyLogger
+	keyLogger := tracker.GetKeyLogger()
+	if keyLogger == nil {
+		return
+	}
 
 	fmt.Println("Time tracking started..")
 	for {
@@ -62,7 +67,7 @@ func startTracking() {
 			record.DailyRecord += 1
 			record.WeeklyRecord += 1
 			captureAfter = (1 + rand.Int()%DURATION) + (DURATION - captureAfter)
-			ticker.Reset(time.Duration(captureAfter) * time.Second)
+			ticker.Reset(time.Duration(captureAfter) * time.Minute)
 
 			record.Timestamp = now
 			record.ActiveWindow = tracker.GetActiveWindowName()
@@ -85,6 +90,11 @@ func startTracking() {
 			dayChange.Reset(24 * time.Hour)
 
 			record.DailyRecord = 0
+
+		case e := <-keyLogger.Read():
+			if e.KeyPress() {
+				record.KeyboardStrokes++
+			}
 
 		case <-c:
 			fmt.Println("\nTime tracking stopped..")
