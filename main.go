@@ -90,6 +90,9 @@ func startTracking() {
 			dayChange.Reset(24 * time.Hour)
 
 			record.DailyRecord = 0
+			if now.Weekday() == time.Monday {
+				record.WeeklyRecord = 0
+			}
 
 		case e := <-keyLogger.Read():
 			if e.KeyPress() {
