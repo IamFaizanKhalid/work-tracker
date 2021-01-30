@@ -44,9 +44,9 @@ func main() {
 func startTracking() {
 	record := getLastRecord()
 
-	minutesPassed := 0
+	rand.Seed(time.Now().UTC().UnixNano())
 	captureAfter := 1 + rand.Int()%DURATION
-	ticker := time.NewTicker(time.Duration(captureAfter) * time.Minute)
+	ticker := time.NewTicker(time.Duration(captureAfter) * time.Second)
 	defer ticker.Stop()
 
 	c := make(chan os.Signal, 1)
@@ -58,9 +58,8 @@ func startTracking() {
 		case now := <-ticker.C:
 			record.DailyRecord += 1
 			record.WeeklyRecord += 1
-			minutesPassed += captureAfter
 			captureAfter = (1 + rand.Int()%DURATION) + (DURATION - captureAfter)
-			ticker.Reset(time.Duration(captureAfter) * time.Minute)
+			ticker.Reset(time.Duration(captureAfter) * time.Second)
 
 			record.Timestamp = now
 			record.ActiveWindow = tracker.GetActiveWindowName()
@@ -78,7 +77,7 @@ func startTracking() {
 			}
 			dayChange.Reset(24 * time.Hour)
 		case <-c:
-			fmt.Println("Time tracking stopped..")
+			fmt.Println("\nTime tracking stopped..")
 			return
 		}
 	}
