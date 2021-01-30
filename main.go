@@ -33,22 +33,25 @@ func main() {
 		log.Fatalf("Error creating working directory: %v", err)
 	}
 
-	n := time.Now()
-	d := time.Until(time.Date(n.Year(), n.Month(), n.Day()+1, 0, 0, 0, 0, n.Location()))
-	dayChange = time.NewTicker(d)
-	defer dayChange.Stop()
-
 	startTracking()
 }
 
 func startTracking() {
 	record := getLastRecord()
 
+	// Ticker to trigger capture
 	rand.Seed(time.Now().UTC().UnixNano())
 	captureAfter := 1 + rand.Int()%DURATION
 	ticker := time.NewTicker(time.Duration(captureAfter) * time.Second)
 	defer ticker.Stop()
 
+	// Ticker to change day
+	n := time.Now()
+	d := time.Until(time.Date(n.Year(), n.Month(), n.Day()+1, 0, 0, 0, 0, n.Location()))
+	dayChange = time.NewTicker(d)
+	defer dayChange.Stop()
+
+	// Channel to detect interrupt
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -67,16 +70,22 @@ func startTracking() {
 
 			record.log()
 			record.print()
+
 			record.KeyboardStrokes = 0
 			record.MouseStrokes = 0
+
 		case now := <-dayChange.C:
 			CurrentDir = WorkDir + "/" + now.Format("20060102")
+
 			err := os.MkdirAll(CurrentDir, os.ModePerm)
 			if err != nil {
 				log.Fatalf("Error creating working directory: %v", err)
 			}
+
 			dayChange.Reset(24 * time.Hour)
+
 			record.DailyRecord = 0
+
 		case <-c:
 			fmt.Println("\nTime tracking stopped..")
 			return
