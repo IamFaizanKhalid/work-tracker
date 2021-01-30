@@ -76,6 +76,7 @@ func startTracking() {
 				log.Fatalf("Error creating working directory: %v", err)
 			}
 			dayChange.Reset(24 * time.Hour)
+			record.DailyRecord = 0
 		case <-c:
 			fmt.Println("\nTime tracking stopped..")
 			return
