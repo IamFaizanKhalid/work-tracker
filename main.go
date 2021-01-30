@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -45,7 +46,7 @@ func main() {
 }
 
 func startTracking() {
-	var record Record
+	record := getLastRecord()
 
 	minutesPassed := 0
 	captureAfter := 1 + rand.Int()%DURATION
@@ -124,4 +125,41 @@ func (r *Record) print() {
 	fmt.Printf("> Activity level:\t%d\n", r.ActivityLevel)
 	fmt.Printf("> Events:\t\t%d keyboard, %d mouse\n", r.KeyboardStrokes, r.MouseStrokes)
 	fmt.Printf("------------------------------\n\n")
+}
+
+func getLastRecord() Record {
+	today := time.Now()
+	day := (6 + today.Weekday()) % 7 // 0: Monday, 6: Sunday
+
+	for ; day >= 0; day-- {
+		dir := WorkDir + "/" + today.Format("20060102")
+
+		file, err := os.Open(dir + "/logs")
+		if err == nil {
+			scanner := bufio.NewScanner(file)
+			var lastText string
+			for scanner.Scan() {
+				lastText = scanner.Text()
+			}
+
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
+			}
+
+			if lastText == "" {
+				return Record{}
+			}
+
+			var record Record
+			err = json.Unmarshal([]byte(lastText), &record)
+			if err != nil {
+				log.Printf("Error getting last record: %v\n", err)
+				return Record{}
+			}
+			return record
+		}
+		today.AddDate(0, 0, -1)
+	}
+
+	return Record{}
 }
