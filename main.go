@@ -51,6 +51,7 @@ func startTracking() {
 	minutesPassed := 0
 	captureAfter := 1 + rand.Int()%DURATION
 	ticker := time.NewTicker(time.Duration(captureAfter) * time.Second)
+	defer ticker.Stop()
 
 	for range ticker.C {
 		record.DailyRecord += 1
