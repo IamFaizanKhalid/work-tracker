@@ -90,7 +90,7 @@ func getTimeLogged(captures int) string {
 }
 
 func saveScreenshot(timestamp time.Time) {
-	fileName := fmt.Sprintf(CurrentDir+"/%s.png", timestamp.Format("150405"))
+	fileName := fmt.Sprintf(CurrentDir+"/%s", timestamp.Format("150405"))
 
 	file, err := os.Create(fileName)
 	if err != nil {
