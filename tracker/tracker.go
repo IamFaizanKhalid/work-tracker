@@ -1,7 +1,6 @@
 package tracker
 
 import (
-	"fmt"
 	"github.com/MarinX/keylogger"
 	"github.com/kbinani/screenshot"
 	"image"
@@ -27,7 +26,6 @@ func GetScreenShot() *image.RGBA {
 }
 
 func GetKeyLogger() *keylogger.KeyLogger {
-	fmt.Println(keylogger.FindAllKeyboardDevices())
 	kl, err := keylogger.New(keylogger.FindKeyboardDevice())
 	if err != nil {
 		log.Printf("Error getting keylogger: %v\n", err)
