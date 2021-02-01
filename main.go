@@ -14,6 +14,8 @@ import (
 )
 
 const DURATION = 10
+const DURATION_UNIT = time.Minute
+const MAX_ACTIVITY = 150
 
 var WorkDir string
 var CurrentDir string
@@ -41,7 +43,7 @@ func startTracking() {
 	// Ticker to trigger capture
 	rand.Seed(time.Now().UTC().UnixNano())
 	captureAfter := 1 + rand.Int()%DURATION
-	ticker := time.NewTicker(time.Duration(captureAfter) * time.Minute)
+	ticker := time.NewTicker(time.Duration(captureAfter) * DURATION_UNIT)
 	defer ticker.Stop()
 
 	// Ticker to change day
@@ -64,10 +66,14 @@ func startTracking() {
 	for {
 		select {
 		case now := <-ticker.C:
-			record.DailyRecord += 1
-			record.WeeklyRecord += 1
+			record.ActivityLevel = (10 * ((record.KeyboardStrokes + record.MouseStrokes) % MAX_ACTIVITY)) / MAX_ACTIVITY
+			if record.ActivityLevel > 0 {
+				record.DailyRecord += 1
+				record.WeeklyRecord += 1
+			}
+
 			captureAfter = (1 + rand.Int()%DURATION) + (DURATION - captureAfter)
-			ticker.Reset(time.Duration(captureAfter) * time.Minute)
+			ticker.Reset(time.Duration(captureAfter) * DURATION_UNIT)
 
 			record.Timestamp = now
 			record.ActiveWindow = tracker.GetActiveWindowName()
