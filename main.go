@@ -62,6 +62,7 @@ func startTracking() {
 		return
 	}
 
+	fmt.Printf("Logged today:\t%v\t\t\tLogged this week:\t%v\n\n", getTimeLogged(record.DailyRecord), getTimeLogged(record.WeeklyRecord))
 	fmt.Println("Time tracking started..")
 	for {
 		select {
