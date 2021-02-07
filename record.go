@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/IamFaizanKhalid/work-tracker/constants"
+	"github.com/IamFaizanKhalid/work-tracker/log"
 	"os"
 	"time"
 )
@@ -22,25 +23,29 @@ type Record struct {
 func (r *Record) log() {
 	b, err := json.Marshal(r)
 	if err != nil {
-		log.Printf("Error marshalling record: %v", err)
+		log.Error.Printf("Error marshalling record: %v", err)
+		return
 	}
 
 	buffer := new(bytes.Buffer)
 	err = json.Compact(buffer, b)
 	if err != nil {
-		log.Printf("Error compacting json record: %v", err)
+		log.Error.Printf("Error compacting json record: %v", err)
+		return
 	}
 	buffer.WriteByte('\n')
 
-	file, err := os.OpenFile(CurrentDir+"/logs", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0660)
+	file, err := os.OpenFile(constants.CurrentDir+"/"+constants.WorkLogFileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0660)
 	if err != nil {
-		log.Printf("Error opening log file: %v", err)
+		log.Error.Printf("Error opening log file: %v", err)
+		return
 	}
 	defer file.Close()
 
 	_, err = file.Write(buffer.Bytes())
 	if err != nil {
-		log.Printf("Error writing log file: %v", err)
+		log.Error.Printf("Error writing log file: %v", err)
+		return
 	}
 }
 
