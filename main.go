@@ -9,7 +9,6 @@ import (
 	"github.com/IamFaizanKhalid/work-tracker/tracker"
 	"github.com/IamFaizanKhalid/work-tracker/uploader"
 	"image/png"
-	"math/rand"
 	"os"
 	"os/signal"
 	"time"
@@ -39,9 +38,10 @@ func startTracking() {
 	record := getLastRecord()
 
 	// Ticker to trigger capture
-	rand.Seed(time.Now().UTC().UnixNano())
-	captureAfter := 1 + rand.Int()%constants.DURATION
-	ticker := time.NewTicker(time.Duration(captureAfter) * constants.DURATION_UNIT)
+	// rand.Seed(time.Now().UTC().UnixNano())
+	// captureAfter := 1 + rand.Int()%constants.DURATION
+	// ticker := time.NewTicker(time.Duration(constants.DURATION) * constants.DURATION_UNIT)
+	ticker := time.NewTicker(constants.CAPTURE_AFTER)
 	defer ticker.Stop()
 
 	// Ticker to change day
@@ -76,8 +76,8 @@ func startTracking() {
 				record.WeeklyRecord += 1
 			}
 
-			captureAfter = (1 + rand.Int()%constants.DURATION) + (constants.DURATION - captureAfter)
-			ticker.Reset(time.Duration(captureAfter) * constants.DURATION_UNIT)
+			// captureAfter = (1 + rand.Int()%constants.DURATION) + (constants.DURATION - captureAfter)
+			// ticker.Reset(time.Duration(captureAfter) * constants.DURATION_UNIT)
 
 			record.Timestamp = now
 			record.ActiveWindow = tracker.GetActiveWindowName()

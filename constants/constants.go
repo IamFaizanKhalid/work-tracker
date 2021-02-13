@@ -9,8 +9,10 @@ var (
 
 const (
 	DURATION      = 10
-	DURATION_UNIT = time.Minute
-	MIN_ACTIVITY  = 50
+	CAPTURE_AFTER = DURATION * time.Minute
+	// DURATION      = 10
+	// DURATION_UNIT = time.Minute
+	MIN_ACTIVITY = 50
 
 	DriveBaseFolderId = "" // Your folder id from google drive
 	DriveCredentials  = "" // Your service account credentials from json file
