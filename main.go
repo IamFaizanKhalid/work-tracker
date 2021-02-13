@@ -66,7 +66,11 @@ func startTracking() {
 	for {
 		select {
 		case now := <-ticker.C:
-			record.ActivityLevel = (10 * ((record.KeyboardStrokes + record.MouseStrokes) % constants.MAX_ACTIVITY)) / constants.MAX_ACTIVITY
+			record.ActivityLevel = (record.KeyboardStrokes + record.MouseStrokes) / constants.MIN_ACTIVITY
+			if record.ActivityLevel > 10 {
+				record.ActivityLevel = 10
+			}
+
 			if record.ActivityLevel > 0 {
 				record.DailyRecord += 1
 				record.WeeklyRecord += 1

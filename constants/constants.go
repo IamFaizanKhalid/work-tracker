@@ -10,7 +10,7 @@ var (
 const (
 	DURATION      = 10
 	DURATION_UNIT = time.Minute
-	MAX_ACTIVITY  = 150
+	MIN_ACTIVITY  = 50
 
 	DriveBaseFolderId = "" // Your folder id from google drive
 	DriveCredentials  = "" // Your service account credentials from json file
